@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DYNORIX · DASHBOARD</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --background: 222 84% 4.9%;
+      --foreground: 210 40% 98%;
+      --card: 222 84% 4.9%;
+      --card-foreground: 210 40% 98%;
+      --primary: 142 76% 36%;
+      --primary-foreground: 355 100% 97%;
+      --secondary: 217 32% 17%;
+      --secondary-foreground: 210 40% 98%;
+      --border: 217 32% 17%;
+      --input: 217 32% 17%;
+      --ring: 142 76% 36%;
+      --radius: 0.85rem;
+      --neon-glow: 0 0 14px #b22222, 0 0 28px #690c0c;
+      --neon-green-glow: 0 0 10px #16a249, 0 0 20px #16a249;
+    }
+
+    body {
+      background: linear-gradient(135deg,#1e0f0f 0%,#140a0a 50%,#0a0303 100%);
+      color: hsl(var(--foreground));
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    .app { 
+      max-width: 1400px; 
+      margin: 0 auto; 
+      padding: 20px; 
+    }
+
+    /* Navigation */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,80,80,0.3);
+    }
+
+    .brand-title {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #16a249, #9234ea, #db143c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.08em;
+      text-shadow: var(--neon-glow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid #b22222;
+      border-radius: 999px;
+    }
+
+    .status-led {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 10px;
+      background: #16a249;
+      box-shadow: 0 0 10px #16a249;
+      margin-right: 6px;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #b22222;
+      color: #ffdddd;
+      padding: 8px 20px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(178,34,34,0.2);
+    }
+
+    /* User Info Card */
+    .user-info {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 100, 100, 0.25);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .info-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #ffb0b0;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffdddd;
+    }
+
+    /* Signal Grid - Your existing style */
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 1100px) { .signal-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) { .signal-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 100, 100, 0.25);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 40px rgba(105,12,12,0.5), 0 0 0 1px rgba(255,80,80,0.2);
+      padding: 1.5rem;
+      transition: 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 18px 50px rgba(178,34,34,0.5), 0 0 0 1px #b22222; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #ffcccc;
+    }
+    .card-header span {
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 999px;
+      border: 1px solid #b22222;
+      box-shadow: 0 0 15px #b22222;
+      background: rgba(180,30,30,0.2);
+    }
+
+    /* Form elements */
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #ffb0b0;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    select, input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(20,8,8,0.8);
+      border: 1px solid #b22222;
+      border-radius: calc(var(--radius) - 2px);
+      color: white;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: #ff4d4d; box-shadow: 0 0 12px #b22222; }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      border: none;
+      font-size: 0.9rem;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #b22222, #690c0c);
+      color: white;
+      box-shadow: 0 6px 22px #b22222;
+    }
+    .btn-primary:hover { transform: scale(1.02); box-shadow: 0 10px 30px #b22222; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #b22222;
+      color: #ffdddd;
+    }
+    .btn-outline:hover { background: rgba(178,34,34,0.2); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(178,34,34,0.3);
+      border: 1px solid #b22222;
+      color: #ffcaca;
+      font-size: 0.75rem;
+    }
+
+    /* Output terminal */
+    .output-terminal {
+      background: rgba(0,0,0,0.7);
+      border-radius: var(--radius);
+      border: 1px solid #b22222;
+      padding: 1.2rem;
+      min-height: 320px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      box-shadow: inset 0 0 30px #2a0a0a;
+    }
+
+    .empty-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 250px;
+      color: #774444;
+      font-style: italic;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    /* Admin Panel */
+    .admin-panel {
+      margin-top: 2rem;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 100, 100, 0.25);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .user-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .user-table th {
+      text-align: left;
+      color: #ffb8b8;
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      padding: 0.5rem;
+      border-bottom: 1px solid #b22222;
+    }
+    .user-table td {
+      padding: 0.6rem 0.5rem;
+      border-bottom: 1px solid rgba(180,60,60,0.3);
+      color: #ffdddd;
+    }
+    .status-active {
+      color: #86efac;
+    }
+    .status-inactive {
+      color: #f87171;
+    }
+    .action-btn {
+      background: transparent;
+      border: 1px solid #b22222;
+      color: #ffdddd;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .action-btn:hover {
+      background: rgba(178,34,34,0.2);
+    }
+
+    .gradient-border {
+      position: relative;
+      background: linear-gradient(135deg, #16a249, #9234ea, #db143c);
+      border-radius: var(--radius);
+      padding: 2px;
+      margin-top: 1.5rem;
+    }
+    .gradient-border > * {
+      background: #0c0505;
+      border-radius: calc(var(--radius) - 2px);
+      height: 100%;
+    }
+
+    .footer-note {
+      text-align: right;
+      color: #ffaaaa;
+      font-size: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    /* Asset panel */
+    .asset-panel {
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .asset-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 40px;
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 4px;
+      border: 1px solid rgba(255,100,100,0.2);
+    }
+    .asset-item input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: #b22222;
+      margin-bottom: 0;
+    }
+
+    .time-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,80,80,0.6);
+      background: rgba(105,12,12,0.3);
+      backdrop-filter: blur(4px);
+      font-size: 0.8rem;
+      color: #ffdddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="brand-title">DYNORIX · V-1</div>
+      <div class="nav-links">
+        <div class="user-badge">
+          <span class="status-led"></span>
+          <span id="usernameDisplay">Loading...</span>
+        </div>
+        <button class="logout-btn" id="logoutBtn">EXIT TERMINAL</button>
+      </div>
+    </nav>
+
+    <!-- User Info Card -->
+    <div class="user-info">
+      <div class="info-item">
+        <span class="info-label">Telegram ID</span>
+        <span class="info-value" id="telegramId">Not set</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Binance ID</span>
+        <span class="info-value" id="binanceId">Not set</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Last Login</span>
+        <span class="info-value" id="lastLogin">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Last Signal</span>
+        <span class="info-value" id="lastSignal">Never</span>
+      </div>
+    </div>
+
+    <!-- Your Existing Signal Grid -->
+    <div class="signal-grid">
+      <!-- left column: asset selection -->
+      <div class="card">
+        <div class="card-header"><span>📈</span> asset pool (OTC)</div>
+        <div style="margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <span class="badge">select multiple</span>
+          <div>
+            <button class="btn-outline" style="padding:4px 10px; margin-right:4px;" id="selectAllAssets">all</button>
+            <button class="btn-outline" style="padding:4px 10px;" id="clearAssets">clear</button>
+          </div>
+        </div>
+        <div class="asset-panel" id="assetCheckboxContainer"></div>
+        <div style="margin-top: 12px; font-size:0.8rem; color:#ffb0b0;">
+          <span id="selectedCount">0</span> assets selected
+        </div>
+      </div>
+
+      <!-- middle column: date + time range -->
+      <div class="card">
+        <div class="card-header"><span>⏳</span> time window</div>
+        <label>start date</label>
+        <input type="date" id="startDate" class="date-input">
+        <label>start time (24h)</label>
+        <input type="time" id="startTime" value="09:00">
+        <label>end date</label>
+        <input type="date" id="endDate" class="date-input">
+        <label>end time (24h)</label>
+        <input type="time" id="endTime" value="17:00">
+        <div style="margin-top:10px; font-size:0.8rem; opacity:0.7;">
+          ⏱️ random gap 3‑10 min · 1M expiry
+        </div>
+      </div>
+
+      <!-- right column: direction + generation -->
+      <div class="card">
+        <div class="card-header"><span>🎛️</span> signal behaviour</div>
+        <label>direction mode</label>
+        <select id="directionMode">
+          <option value="random">random UP/DOWN (fair)</option>
+          <option value="call-heavy">bullish (70% CALL)</option>
+          <option value="put-heavy">bearish (70% PUT)</option>
+        </select>
+        <label>market filter (extra)</label>
+        <select id="marketCategory">
+          <option value="all">all OTC (mix)</option>
+          <option value="currencies">forex OTC</option>
+          <option value="crypto">crypto OTC</option>
+          <option value="commodities">commodities OTC</option>
+          <option value="stocks">stocks OTC</option>
+        </select>
+        <label>number of signals</label>
+        <input type="number" id="signalCount" min="5" max="50" value="18">
+        <div style="display:flex; gap:8px; margin-top: 10px;">
+          <button class="btn btn-primary" id="generateBtn">⚡ generate signals</button>
+          <button class="btn btn-outline" id="copyBtn">📋 copy all</button>
+        </div>
+        <div style="margin-top: 12px; display:flex; align-items:center; gap:6px;">
+          <span class="status-led"></span>
+          <span id="liveStatus" style="color:#ffc0c0;">idle</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output area -->
+    <div class="gradient-border">
+      <div style="padding: 1.8rem; background: #0c0505;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div style="display:flex; gap:12px;">
+            <span style="color:#ffb8b8; text-transform:uppercase; letter-spacing:1px;">📡 live signals</span>
+            <span class="badge" id="outputBadge">awaiting generation</span>
+          </div>
+          <span style="color:#ff9f9f;">generated by DYNORIX core</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.1fr 1.9fr; gap: 1.5rem;">
+          <div class="output-terminal" id="rawOutputBox">
+            <div class="empty-message">
+              ⚡ no signals yet<br>
+              <span style="font-size:0.8rem; margin-top:8px;">configure & generate</span>
+            </div>
+          </div>
+          <div style="background: rgba(0,0,0,0.5); border-radius: var(--radius); border: 1px solid #b22222; padding: 1rem; max-height: 340px; overflow-y: auto;">
+            <table class="signal-table" id="signalTableView">
+              <thead><tr><th>time</th><th>asset</th><th>dir</th></tr></thead>
+              <tbody id="tableBody">
+                <tr><td colspan="3" style="text-align:center; padding:2.5rem; color:#774444;">—— empty ——</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="footer-note">⚡ DYNORIX V-1 · Pixel PERSONAL · hybrid core</div>
+      </div>
+    </div>
+
+    <!-- Admin Panel (Hidden by default) -->
+    <div id="adminPanel" style="display: none;" class="admin-panel">
+      <div class="card-header"><span>👑</span> admin control center</div>
+      
+      <!-- User Management -->
+      <h3 style="color:#ffb8b8; margin: 1rem 0;">user management</h3>
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>username</th>
+            <th>telegram</th>
+            <th>binance</th>
+            <th>last login</th>
+            <th>last signal</th>
+            <th>status</th>
+            <th>actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+
+      <!-- Telegram Control -->
+      <h3 style="color:#ffb8b8; margin: 2rem 0 1rem;">telegram broadcast</h3>
+      <div style="display: grid; gap: 1rem;">
+        <textarea id="telegramMessage" rows="3" style="width:100%; background:rgba(20,8,8,0.8); border:1px solid #b22222; border-radius:8px; padding:12px; color:white;" placeholder="Enter message to send to users..."></textarea>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-primary" onclick="sendToAllUsers()">📢 broadcast all</button>
+          <button class="btn btn-outline" onclick="sendToActiveUsers()">📢 broadcast active</button>
+        </div>
+        <div id="telegramStatus" style="color:#86efac;"></div>
+      </div>
+
+      <!-- Manual Signal -->
+      <h3 style="color:#ffb8b8; margin: 2rem 0 1rem;">manual signal</h3>
+      <div style="display: grid; gap: 1rem;">
+        <textarea id="manualSignal" rows="3" style="width:100%; background:rgba(20,8,8,0.8); border:1px solid #b22222; border-radius:8px; padding:12px; color:white;" placeholder="Enter signal details..."></textarea>
+        <button class="btn btn-primary" onclick="createManualSignal()">⚡ create signal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/auth.js"></script>
+  <script>
+    // Check authentication
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token) {
+      window.location.href = 'index.html';
+    }
+
+    // API Base URL
+    const API_BASE_URL = 'https://your-backend.vercel.app'; // Update this
+
+    // Display user info
+    document.getElementById('usernameDisplay').textContent = user.username || 'User';
+    document.getElementById('telegramId').textContent = user.telegram_id || 'Not set';
+    document.getElementById('binanceId').textContent = user.binance_id || 'Not set';
+    document.getElementById('lastLogin').textContent = user.last_login ? new Date(user.last_login).toLocaleString() : 'First login';
+    document.getElementById('lastSignal').textContent = user.last_signal_used ? new Date(user.last_signal_used).toLocaleString() : 'Never';
+
+    // Show admin panel if user is admin
+    if (user.is_admin) {
+      document.getElementById('adminPanel').style.display = 'block';
+      loadUsers();
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    });
+
+    // ---------- ASSET DATABASE (Your existing code) ----------
+    const OTC_CURRENCIES = [
+      "NZD/CHF (OTC)", "NZD/USD (OTC)", "GBP/NZD (OTC)", "USD/ARS (OTC)",
+      "EUR/NZD (OTC)", "USD/COP (OTC)", "USD/BRL (OTC)", "NZD/JPY (OTC)",
+      "USD/DZD (OTC)", "USD/NGN (OTC)", "CAD/CHF (OTC)", "USD/PHP (OTC)",
+      "USD/BDT (OTC)", "USD/IDR (OTC)", "NZD/CAD (OTC)", "EUR/SGD (OTC)",
+      "USD/EGP (OTC)", "USD/INR (OTC)", "USD/MXN (OTC)", "USD/ZAR (OTC)",
+      "AUD/NZD (OTC)", "USD/PKR (OTC)", "USD/TRY (OTC)"
+    ];
+    const OTC_CRYPTO = [
+      "Ethereum Classic (OTC)", "Cardano (OTC)", "Dogecoin (OTC)", "Beam (OTC)",
+      "Polkadot (OTC)", "Axie Infinity (OTC)", "Dash (OTC)", "Cosmos (OTC)",
+      "Bonk (OTC)", "Floki (OTC)", "Chainlink (OTC)"
+    ];
+    const OTC_COMMODITIES = ["Silver (OTC)", "USCrude (OTC)", "Gold (OTC)", "UKBrent (OTC)"];
+    const OTC_STOCKS = [
+      "Microsoft (OTC)", "Intel (OTC)", "Pfizer Inc (OTC)", "FACEBOOK INC (OTC)",
+      "American Express (OTC)", "Boeing Company (OTC)", "Johnson & Johnson (OTC)",
+      "McDonald's (OTC)"
+    ];
+    const ALL_ASSETS = [...OTC_CURRENCIES, ...OTC_CRYPTO, ...OTC_COMMODITIES, ...OTC_STOCKS];
+
+    // State
+    let selectedAssets = ALL_ASSETS.slice();
+    let generatedSignals = [];
+
+    // DOM elements
+    const container = document.getElementById('assetCheckboxContainer');
+    const selectAllBtn = document.getElementById('selectAllAssets');
+    const clearBtn = document.getElementById('clearAssets');
+    const selectedSpan = document.getElementById('selectedCount');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const startTime = document.getElementById('startTime');
+    const endTime = document.getElementById('endTime');
+    const directionMode = document.getElementById('directionMode');
+    const marketCategory = document.getElementById('marketCategory');
+    const signalCount = document.getElementById('signalCount');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const rawOutput = document.getElementById('rawOutputBox');
+    const tableBody = document.getElementById('tableBody');
+    const outputBadge = document.getElementById('outputBadge');
+    const liveStatus = document.getElementById('liveStatus');
+
+    // Set dates
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    startDate.value = formatDate(today);
+    endDate.value = formatDate(tomorrow);
+
+    // Render checkboxes
+    function renderAssetCheckboxes() {
+      let html = '';
+      ALL_ASSETS.forEach(asset => {
+        const checked = selectedAssets.includes(asset) ? 'checked' : '';
+        html += `<div class="asset-item">
+          <input type="checkbox" class="asset-cb" value="${asset}" ${checked}>
+          <label style="flex:1; margin:0; cursor:pointer;">${asset}</label>
+        </div>`;
+      });
+      container.innerHTML = html;
+      updateCount();
+
+      document.querySelectorAll('.asset-cb').forEach(cb => {
+        cb.addEventListener('change', function() {
+          const val = this.value;
+          if (this.checked) {
+            if (!selectedAssets.includes(val)) selectedAssets.push(val);
+          } else {
+            selectedAssets = selectedAssets.filter(a => a !== val);
+          }
+          updateCount();
+        });
+      });
+    }
+
+    function updateCount() {
+      selectedSpan.innerText = selectedAssets.length;
+    }
+
+    selectAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.asset-cb').forEach(cb => cb.checked = true);
+      selectedAssets = ALL_ASSETS.slice();
+      updateCount();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      document.querySelectorAll('.asset-cb').forEach(cb => cb.checked = false);
+      selectedAssets = [];
+      updateCount();
+    });
+
+    function getCategoryFiltered() {
+      const cat = marketCategory.value;
+      if (cat === 'all') return ALL_ASSETS;
+      if (cat === 'currencies') return OTC_CURRENCIES;
+      if (cat === 'crypto') return OTC_CRYPTO;
+      if (cat === 'commodities') return OTC_COMMODITIES;
+      if (cat === 'stocks') return OTC_STOCKS;
+      return ALL_ASSETS;
+    }
+
+    function getEffectiveAssetList() {
+      const catList = getCategoryFiltered();
+      return selectedAssets.filter(asset => catList.includes(asset));
+    }
+
+    function pad(n) { return String(n).padStart(2,'0'); }
+    function randomInt(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+    function randomDirection(type) {
+      if (type === 'call-heavy') return Math.random() < 0.7 ? 'CALL' : 'PUT';
+      if (type === 'put-heavy') return Math.random() < 0.7 ? 'PUT' : 'CALL';
+      return Math.random() > 0.5 ? 'CALL' : 'PUT';
+    }
+
+    // Generate signals
+    async function generateSignals() {
+      const assets = getEffectiveAssetList();
+      if (assets.length === 0) {
+        alert('Please select at least one asset.');
+        return;
+      }
+
+      const start = startDate.value;
+      const end = endDate.value;
+      const sTime = startTime.value;
+      const eTime = endTime.value;
+      if (!start || !end || !sTime || !eTime) { alert('fill date/time'); return; }
+
+      const startDateTime = new Date(`${start}T${sTime}:00`);
+      let endDateTime = new Date(`${end}T${eTime}:00`);
+
+      if (startDateTime >= endDateTime) {
+        alert('Start must be before end');
+        return;
+      }
+
+      const now = new Date();
+      if (endDateTime <= now) {
+        alert('End time must be in the future');
+        return;
+      }
+
+      const count = parseInt(signalCount.value, 10) || 18;
+      const dirMode = directionMode.value;
+
+      const signals = [];
+      let current = new Date(Math.max(startDateTime.getTime(), now.getTime()));
+
+      let safety = 0;
+      while (signals.length < count && current < endDateTime && safety++ < 200) {
+        const asset = assets[Math.floor(Math.random() * assets.length)];
+        const direction = randomDirection(dirMode);
+        signals.push({
+          time: new Date(current),
+          asset,
+          direction
+        });
+
+        const gap = randomInt(3,10);
+        current = new Date(current.getTime() + gap * 60000);
+      }
+
+      generatedSignals = signals;
+
+      // Update UI
+      renderRawOutput(signals);
+      renderTable(signals);
+      outputBadge.innerText = `${signals.length} signals · live`;
+      liveStatus.innerText = 'signals ready';
+
+      // Record signal use
+      try {
+        await fetch(`${API_BASE_URL}/api/record-signal-use`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ userId: user.id })
+        });
+      } catch (error) {
+        console.error('Error recording signal use:', error);
+      }
+    }
+
+    function renderRawOutput(signals) {
+      if (signals.length === 0) {
+        rawOutput.innerHTML = `<div class="empty-message">⚡ no signals yet<br><span style="font-size:0.8rem; margin-top:8px;">configure & generate</span></div>`;
+        return;
+      }
+      let txt = '🚀 DYNORIX SIGNALS 🚀\n';
+      txt += '================================\n';
+      txt += '👑 owner : @MinhazBoii & TraderPixel_Admin\n';
+      txt += `⏰ generated: ${new Date().toLocaleTimeString()}\n`;
+      txt += '⌛ 1M expiry\n\n';
+      signals.forEach(s => {
+        const hh = pad(s.time.getHours());
+        const mm = pad(s.time.getMinutes());
+        txt += `${hh}:${mm} - ${s.asset} - ${s.direction}\n`;
+      });
+      txt += '\n===============================';
+      rawOutput.innerText = txt;
+    }
+
+    function renderTable(signals) {
+      if (signals.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2.5rem; color:#774444;">—— empty ——</td></tr>';
+        return;
+      }
+      let rows = '';
+      signals.forEach(s => {
+        const timeStr = `${pad(s.time.getHours())}:${pad(s.time.getMinutes())}`;
+        const dirClass = s.direction === 'CALL' ? 'dir-call' : 'dir-put';
+        rows += `<tr>
+          <td>${timeStr}</td>
+          <td><span class="asset-badge">${s.asset}</span></td>
+          <td class="${dirClass}">${s.direction}</td>
+        </tr>`;
+      });
+      tableBody.innerHTML = rows;
+    }
+
+    async function copyAll() {
+      if (generatedSignals.length === 0) { alert('generate first'); return; }
+      let txt = '';
+      generatedSignals.forEach(s => {
+        const hh = pad(s.time.getHours());
+        const mm = pad(s.time.getMinutes());
+        txt += `${hh}:${mm} - ${s.asset} - ${s.direction}\n`;
+      });
+      await navigator.clipboard.writeText(txt);
+      liveStatus.innerText = 'copied!';
+      setTimeout(() => liveStatus.innerText = 'ready', 1200);
+    }
+
+    // Admin functions
+    async function loadUsers() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = await response.json();
+        displayUsers(users);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    function displayUsers(users) {
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '';
+      
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.telegram_id || 'N/A'}</td>
+          <td>${user.binance_id || 'N/A'}</td>
+          <td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
+          <td>${user.last_signal_used ? new Date(user.last_signal_used).toLocaleString() : 'Never'}</td>
+          <td class="${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'ACTIVE' : 'INACTIVE'}</td>
+          <td>
+            <button class="action-btn" onclick="toggleUserStatus('${user.id}')">toggle</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    window.toggleUserStatus = async (userId) => {
+      try {
+        await fetch(`${API_BASE_URL}/api/users/${userId}/toggle-status`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadUsers();
+      } catch (error) {
+        console.error('Error toggling user status:', error);
+      }
+    };
+
+    window.sendToAllUsers = async () => {
+      const message = document.getElementById('telegramMessage').value;
+      if (!message) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/telegram/broadcast`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ message, target: 'all' })
+        });
+        const data = await response.json();
+        document.getElementById('telegramStatus').textContent = `✅ Sent to ${data.sent} users`;
+      } catch (error) {
+        console.error('Error sending telegram message:', error);
+      }
+    };
+
+    window.sendToActiveUsers = async () => {
+      const message = document.getElementById('telegramMessage').value;
+      if (!message) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/telegram/broadcast`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ message, target: 'active' })
+        });
+        const data = await response.json();
+        document.getElementById('telegramStatus').textContent = `✅ Sent to ${data.sent} active users`;
+      } catch (error) {
+        console.error('Error sending telegram message:', error);
+      }
+    };
+
+    window.createManualSignal = async () => {
+      const signal = document.getElementById('manualSignal').value;
+      if (!signal) return;
+      
+      try {
+        await fetch(`${API_BASE_URL}/api/signals/manual`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ signal })
+        });
+        alert('Signal created!');
+        document.getElementById('manualSignal').value = '';
+      } catch (error) {
+        console.error('Error creating signal:', error);
+      }
+    };
+
+    // Initialize
+    renderAssetCheckboxes();
+    generateBtn.addEventListener('click', generateSignals);
+    copyBtn.addEventListener('click', copyAll);
+
+    // Auto-refresh signals every 30 seconds (optional)
+    // setInterval(loadSignals, 30000);
+  </script>
+</body>
+</html>
